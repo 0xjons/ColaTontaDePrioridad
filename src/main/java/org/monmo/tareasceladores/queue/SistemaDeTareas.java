@@ -11,8 +11,9 @@ package org.monmo.tareasceladores.queue;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import org.monmo.tareasceladores.Tarea;
-import org.monmo.tareasceladores.Usuario;
+import org.monmo.tareasceladores.entities.Tarea;
+import org.monmo.tareasceladores.entities.Usuario;
+import org.monmo.tareasceladores.utils.UtilesTareas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +21,7 @@ public class SistemaDeTareas {
 
     private static final Logger logger = LoggerFactory.getLogger(SistemaDeTareas.class);
 
-    private static final int MAX_PRIORIDAD = 9;
-    private static final int MAX_REINTENTOS = 3;
+
 
     private PriorityQueue<Tarea> colaDeTareas;
     private Queue<Tarea> tareasEnEspera;
@@ -50,8 +50,8 @@ public class SistemaDeTareas {
         while (!colaDeTareas.isEmpty()) {
             Tarea tarea = colaDeTareas.poll();
             long minutosDesdeCreacion = ChronoUnit.MINUTES.between(tarea.getCreadaEn(), ahora);
-            if (minutosDesdeCreacion > 30 && tarea.getPrioridad() < MAX_PRIORIDAD) {
-                int nuevaPrioridad = Math.min(tarea.getPrioridad() + 1, MAX_PRIORIDAD);
+            if (minutosDesdeCreacion > 30 && tarea.getPrioridad() < UtilesTareas.MAX_PRIORIDAD) {
+                int nuevaPrioridad = Math.min(tarea.getPrioridad() + 1, UtilesTareas.MAX_PRIORIDAD);
                 tarea.setPrioridad(nuevaPrioridad);
                 logger.debug("Prioridad incrementada para tarea ID {} a {}", tarea.getTareaId(), nuevaPrioridad);
             }
@@ -84,9 +84,9 @@ public class SistemaDeTareas {
             indexUsuarioActual = (indexUsuarioActual + 1) % usuarios.size();
             intentos++;
 
-            if (usuario.getOnline() == 1 && usuario.puedeAsignarTarea()) {
+            if (usuario.getOnline() == 1 && UtilesTareas.puedeAsignarTarea(usuario)) {
                 logger.info("Asignando tarea ID {} con prioridad {} a {}", tarea.getTareaId(), tarea.getPrioridad(), usuario.getNombre());
-                usuario.asignarTarea();
+                UtilesTareas.asignarTarea(usuario);
                 int conteo = estadisticasDeAsignacion.get(usuario) + 1;
                 estadisticasDeAsignacion.put(usuario, conteo);
                 return true;
